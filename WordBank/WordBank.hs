@@ -22,9 +22,6 @@ makeNoDuplicateList ioString = do
         map (filter isLetter . filter isAscii . map toLower) .
         words $ string
 
--- stupidCharacterFilter :: String -> Bool
--- stupidCharacterFilter a = not (isLetter (head a) || isAscii (last a))
-
 makeString :: IO [String] -> IO String
 makeString l = do
     listWordBank <- l
@@ -32,5 +29,11 @@ makeString l = do
 
 listToString :: [String] -> String -> String
 listToString (x:xs) str = case x:xs of
-    [x] -> str ++ ", " ++ x
-    _ -> if str /= "" then listToString xs $ str ++ ", " ++ x else listToString xs $ str ++ x
+    [x] ->
+        str ++ ", " ++ x
+    _ ->
+        if str /= ""
+        then listToString xs
+            $ str ++ ", " ++ x
+        else listToString xs
+            $ str ++ x
