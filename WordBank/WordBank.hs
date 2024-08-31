@@ -18,7 +18,7 @@ makeNoDuplicateList ioString = do
     return $
         sort .
         filter (not . null) .
-        nub .
+        nub . -- remove duplicate elements
         map (filter isLetter . filter isAscii . map toLower) .
         words $ string
 

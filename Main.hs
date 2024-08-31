@@ -15,6 +15,6 @@ main = do
         "Game" ->
             case readMaybe $ args !! 1 :: Maybe Difficulty of
                 Just difficulty -> guessWordGame difficulty
-                Nothing -> putStrLn "Incorrect. Please choose a difficulty." >> main
+                Nothing -> putStrLn "Incorrect. Please choose a difficulty."
         _ ->
             putStr "Error"
