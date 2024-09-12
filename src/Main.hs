@@ -1,3 +1,4 @@
+module Main where
 import System.Environment ( getArgs )
 import WordBank.WordBank (createWordBank)
 import GuessTheWord.GuessWordGame (guessWordGame)

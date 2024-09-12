@@ -8,7 +8,7 @@ import Control.Monad.State
       MonadState(put, get), modify )
 import Control.Exception (throw, throwIO)
 import GHC.Float (float2Int)
--- import System.Random (randomIO)
+import System.Random (randomIO)
 
 data GameSettings = GameSettings {lives :: Int, hiddenLettersPercent :: Float, difficulty :: Difficulty}
 
@@ -39,7 +39,7 @@ processWord word hiddenLettersPercent =
     zipWith
         (\char hiddenChar -> if hiddenChar == '_' then hiddenChar else char)
         word (hiddenLetters numHiddenChars)
-    where numHiddenChars :: Int = float2Int hiddenLettersPercent * length word
+    where numHiddenChars = float2Int hiddenLettersPercent * length word
 
 hiddenLetters :: Int -> String
 hiddenLetters numHiddenChars = ""

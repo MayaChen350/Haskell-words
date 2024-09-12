@@ -1,6 +1,5 @@
 module WordBank.WordBank (createWordBank) where
 import Data.List (nub, sort)
-import Distribution.Compat.CharParsing (CharParsing(string))
 import Data.Char (toLower, isAscii, isLetter)
 
 createWordBank :: IO String
