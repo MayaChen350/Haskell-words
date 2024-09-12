@@ -38,11 +38,17 @@ processWord :: String -> Float -> String
 processWord word hiddenLettersPercent =
     zipWith
         (\char hiddenChar -> if hiddenChar == '_' then hiddenChar else char)
-        word (hiddenLetters numHiddenChars)
+        word (hiddenLetters numHiddenChars "")
     where numHiddenChars = float2Int hiddenLettersPercent * length word
 
-hiddenLetters :: Int -> String
-hiddenLetters numHiddenChars = ""
+hiddenLetters :: Int -> Int -> String -> IO String
+hiddenLetters wordLength numHiddenChars currStr = do
+    if numHiddenChars = 0 then return currStr else
+    digit <- randomIO (1, 0)
+    case show digit of
+        "1" -> hiddenLetters (numHiddenChars -1) (currStr ++ "1")
+        "0" -> hiddenCharacters (numHiddenChars - 
+    
 
 setSettings :: Difficulty -> GameState()
 setSettings difficulty = case difficulty of
