@@ -7,8 +7,10 @@ import Control.Monad.State
       execStateT,
       MonadState(put, get), modify )
 import Control.Exception (throw, throwIO)
-import GHC.Float (float2Int)
 import System.Random (randomIO)
+import Immutable.Shuffle (shuffleM)
+import qualified Data.Vector as V
+import GHC.Float (int2Float)
 
 data GameSettings = GameSettings {lives :: Int, hiddenLettersPercent :: Float, difficulty :: Difficulty}
 
@@ -34,21 +36,21 @@ playGame = do
     gameState <- get
     throw (userError "Not Implemented yet")
 
-processWord :: String -> Float -> String
-processWord word hiddenLettersPercent =
-    zipWith
-        (\char hiddenChar -> if hiddenChar == '_' then hiddenChar else char)
-        word (hiddenLetters numHiddenChars "")
-    where numHiddenChars = float2Int hiddenLettersPercent * length word
+processWord :: String -> Float -> IO String
+processWord word hiddenLettersPercent = do
+    hiddenList <- hiddenOutput (length word) numHiddenChars
+    return $ zipWith
+        (\char hiddenChar -> if hiddenChar == '0' then '_' else char)
+        word hiddenList
+    where numHiddenChars = floor (hiddenLettersPercent * int2Float (length word))
 
-hiddenLetters :: Int -> Int -> String -> IO String
-hiddenLetters wordLength numHiddenChars currStr = do
-    if numHiddenChars = 0 then return currStr else
-    digit <- randomIO (1, 0)
-    case show digit of
-        "1" -> hiddenLetters (numHiddenChars -1) (currStr ++ "1")
-        "0" -> hiddenCharacters (numHiddenChars - 
-    
+hiddenOutput :: Int -> Int -> IO String
+hiddenOutput wordLength numHiddenChars = do
+    let outputs = replicate numHiddenChars 0 ++ replicate (wordLength - numHiddenChars) 1
+    print outputs
+    vector <- shuffleM (V.fromList outputs)
+    return $ concatMap show $ V.toList vector
+
 
 setSettings :: Difficulty -> GameState()
 setSettings difficulty = case difficulty of

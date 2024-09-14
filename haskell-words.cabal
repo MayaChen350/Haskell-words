@@ -25,7 +25,9 @@ library
       Cabal-syntax
     , base >=4.7 && <5
     , mtl
+    , perfect-vector-shuffle
     , random
+    , vector
   default-language: Haskell2010
 
 executable haskell-words-exe
@@ -41,5 +43,7 @@ executable haskell-words-exe
       Cabal-syntax
     , base >=4.7 && <5
     , mtl
+    , perfect-vector-shuffle
     , random
+    , vector
   default-language: Haskell2010

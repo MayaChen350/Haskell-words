@@ -3,7 +3,14 @@
 # For more information, please see the documentation at:
 #   https://docs.haskellstack.org/en/stable/lock_files
 
-packages: []
+packages:
+- completed:
+    hackage: perfect-vector-shuffle-0.1.1.2@sha256:89218e4a65138fecc56b7d36efc5186278845d087ab12ad69221eb5fc6be12ee,3644
+    pantry-tree:
+      sha256: a48fb676bcb71731db40ddf99cfd3163bd600209c7cba84bd2b58bb0bf79225d
+      size: 483
+  original:
+    hackage: perfect-vector-shuffle-0.1.1.2@sha256:89218e4a65138fecc56b7d36efc5186278845d087ab12ad69221eb5fc6be12ee,3644
 snapshots:
 - completed:
     sha256: edbd50d7e7c85c13ad5f5835ae2db92fab1e9cf05ecf85340e2622ec0a303df1

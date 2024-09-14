@@ -6,6 +6,8 @@ dependencies:
   - random
   - mtl
   - Cabal-syntax
+  - perfect-vector-shuffle
+  - vector
 library:
   source-dirs: src/libs
 executables:
