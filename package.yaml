@@ -8,6 +8,7 @@ dependencies:
   - Cabal-syntax
   - perfect-vector-shuffle
   - vector
+  - split
 library:
   source-dirs: src/libs
 executables:

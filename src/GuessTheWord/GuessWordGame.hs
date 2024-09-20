@@ -1,16 +1,18 @@
 module GuessTheWord.GuessWordGame (guessWordGame) where
 import Enum (Difficulty(..))
 import Control.Monad.State
-    ( StateT,
-      MonadIO(liftIO),
+    ( modify,
       evalStateT,
       execStateT,
-      MonadState(put, get), modify )
-import Control.Exception (throw, throwIO)
-import System.Random (randomIO)
-import Immutable.Shuffle (shuffleM)
+      MonadIO(liftIO),
+      MonadState(get, put),
+      StateT )
+import Control.Exception ( throw )
+import Immutable.Shuffle ( shuffleM )
 import qualified Data.Vector as V
-import GHC.Float (int2Float)
+import Data.List.Split ( splitOn )
+import GHC.Float ( int2Float )
+import System.Random (randomRIO)
 
 data GameSettings = GameSettings {lives :: Int, hiddenLettersPercent :: Float, difficulty :: Difficulty}
 
@@ -34,8 +36,19 @@ gameIntro = do
 playGame :: GameState ()
 playGame = do
     gameState <- get
-    throw (userError "Not Implemented yet")
+    wordToFind <- liftIO findRandomWord
+    processedWord <- liftIO $ processWord wordToFind (hiddenLettersPercent gameState)
+    liftIO $ putStrLn processedWord
 
+wordBankList :: IO [String]
+wordBankList = splitOn ", " <$> readFile "data/word_bank.txt"
+
+findRandomWord :: IO String
+findRandomWord = do
+    wordList <- wordBankList
+    randomIndex <- randomRIO (0, length wordList)
+    return $ wordList !! randomIndex
+    
 processWord :: String -> Float -> IO String
 processWord word hiddenLettersPercent = do
     hiddenList <- hiddenOutput (length word) numHiddenChars
@@ -47,7 +60,6 @@ processWord word hiddenLettersPercent = do
 hiddenOutput :: Int -> Int -> IO String
 hiddenOutput wordLength numHiddenChars = do
     let outputs = replicate numHiddenChars 0 ++ replicate (wordLength - numHiddenChars) 1
-    print outputs
     vector <- shuffleM (V.fromList outputs)
     return $ concatMap show $ V.toList vector
 

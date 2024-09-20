@@ -27,6 +27,7 @@ library
     , mtl
     , perfect-vector-shuffle
     , random
+    , split
     , vector
   default-language: Haskell2010
 
@@ -45,5 +46,6 @@ executable haskell-words-exe
     , mtl
     , perfect-vector-shuffle
     , random
+    , split
     , vector
   default-language: Haskell2010
