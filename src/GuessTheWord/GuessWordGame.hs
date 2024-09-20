@@ -38,7 +38,7 @@ playGame = do
     gameState <- get
     wordToFind <- liftIO findRandomWord
     processedWord <- liftIO $ processWord wordToFind (hiddenLettersPercent gameState)
-    liftIO $ putStrLn processedWord
+    liftIO $ putStrLn $ fst processedWord
 
 wordBankList :: IO [String]
 wordBankList = splitOn ", " <$> readFile "data/word_bank.txt"
@@ -49,12 +49,12 @@ findRandomWord = do
     randomIndex <- randomRIO (0, length wordList)
     return $ wordList !! randomIndex
     
-processWord :: String -> Float -> IO String
+processWord :: String -> Float -> IO (String, String)
 processWord word hiddenLettersPercent = do
     hiddenList <- hiddenOutput (length word) numHiddenChars
-    return $ zipWith
+    return $ (zipWith
         (\char hiddenChar -> if hiddenChar == '0' then '_' else char)
-        word hiddenList
+        word hiddenList, word)
     where numHiddenChars = floor (hiddenLettersPercent * int2Float (length word))
 
 hiddenOutput :: Int -> Int -> IO String
