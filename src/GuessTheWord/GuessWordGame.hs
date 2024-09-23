@@ -43,20 +43,20 @@ playGame = do
 
     let processedWord = processWord wordToFind hiddenOutputs
 
-    if gameState 
-    hangmanGambit processedWord
+    if hangmanGambit processedWord == False then gameOver else playGame
 
-hangmanGambit :: (String, String) -> IO ()
+hangmanGambit :: (String, String) -> StateT GameState IO Bool ()
 hangmanGambit wordTuple = do
+    gameState <- get
     guess <- liftIO readLn
 
     let pointsForWord = 10 * length (filter (== '_') (snd wordTuple))
 
     if lives gameState == 0 
-        then gameOver
+        then return False
     else
         if guess == snd wordTuple then
-            increaseScore pointsForWord
+            increaseScore pointsForWord >> return True
         else 
             die >> hangmanGambit wordTuple
 
