@@ -30,7 +30,7 @@ gameIntro = do
             SigmaMale ->
                 liftIO $ putStrLn "You're keeping your edging streak I see...\nBut even in the middle of the rain a lone wolf must be wet.\nIf you want to keep mewing for the legendary level 5 G Y A T T you must keep the grind and succeed at this challenge.\nGoku is watching you. Do not fail this bro."
             _ ->
-                liftIO $ putStrLn $ "Try to guess the word!\nYou have " ++ show (lives gameSettings) ++ " lives."
+                liftIO $ putStrLn $ "Try to guess the words!\nYou have " ++ show (lives gameSettings) ++ " lives."
     playGame
 
 playGame :: GameState ()
@@ -39,26 +39,34 @@ playGame = do
     wordToFind <- liftIO findRandomWord
 
     let numHiddenChars = floor (hiddenLettersPercent gameState * int2Float (length wordToFind))
+
     hiddenOutputs <- liftIO (hiddenOutput (length wordToFind) numHiddenChars)
 
     let processedWord = processWord wordToFind hiddenOutputs
+    if numHiddenChars == 0 
+        then playGame 
+        else liftIO $ print (fst processedWord)
 
-    if hangmanGambit processedWord == False then gameOver else playGame
+    hangmanWin <- hangmanGambit processedWord
 
-hangmanGambit :: (String, String) -> StateT GameState IO Bool ()
+    if hangmanWin 
+        then playGame
+        else gameOver 
+
+hangmanGambit :: (String, String) -> GameState Bool
 hangmanGambit wordTuple = do
     gameState <- get
-    guess <- liftIO readLn
+    guess <- liftIO getLine
 
-    let pointsForWord = 10 * length (filter (== '_') (snd wordTuple))
+    let pointsForWord = 10 * length (filter (== '_') (fst wordTuple))
 
-    if lives gameState == 0 
+    if lives gameState == 0
         then return False
     else
         if guess == snd wordTuple then
-            increaseScore pointsForWord >> return True
-        else 
-            die >> hangmanGambit wordTuple
+            liftIO (putStrLn "You got it!") >> increaseScore pointsForWord >> return True
+        else
+            liftIO (putStrLn "Wrong word.") >> die >> hangmanGambit wordTuple
 
 wordBankList :: IO [String]
 wordBankList = splitOn ", " <$> readFile "data/word_bank.txt"
@@ -96,7 +104,7 @@ die = do
     modify (\gs -> gs { lives = l - 1 })
 
 increaseScore :: Int -> GameState()
-increaseScore = do
+increaseScore pointsForWord = do
     gameState <- get
     let currentScore = score gameState
     modify (\gs -> gs {score = currentScore + pointsForWord})
@@ -104,4 +112,4 @@ increaseScore = do
 gameOver :: GameState ()
 gameOver = do
     gameState <- get
-    liftIO $ print ("Game Over. Your score was of" ++ show (score gameState))
+    liftIO $ putStrLn ("Game Over. Your score was of " ++ show (score gameState))
