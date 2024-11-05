@@ -8,50 +8,57 @@ import Control.Monad.State
       MonadState(get, put),
       StateT )
 import Control.Exception ( throw )
-import Immutable.Shuffle ( shuffleM )
+import Immutable.Shuffle ( shuffleM, shuffle )
 import qualified Data.Vector as V
 import Data.List.Split ( splitOn )
 import GHC.Float ( int2Float )
 import System.Random (randomRIO)
+import Data.List.NonEmpty (append)
 
-data GameSettings = GameSettings {lives :: Int, hiddenLettersPercent :: Float, difficulty :: Difficulty, score :: Int}
+data GameSettings = GameSettings {lives :: Int, hiddenLettersPercent :: Float, difficulty :: Difficulty, score :: Int, foundWords :: [String], unfoundWords :: [String]}
 
 type GameState = StateT GameSettings IO
 
+-- | Start the game.
 guessWordGame:: Difficulty -> IO ()
 guessWordGame dif = do
-    gameSettings <- execStateT (setSettings dif) (GameSettings 0 0 Easy 0)
+    wordBank <- wordBankList
+    gameSettings <- execStateT (setSettings dif) (GameSettings 0 0 dif 0 [] wordBank)
     evalStateT gameIntro gameSettings
 
+-- | Call the introduction message to the game.
 gameIntro :: GameState ()
 gameIntro = do
-    gameSettings <- get
-    case difficulty gameSettings of
-            SigmaMale ->
-                liftIO $ putStrLn "You're keeping your edging streak I see...\nBut even in the middle of the rain a lone wolf must be wet.\nIf you want to keep mewing for the legendary level 5 G Y A T T you must keep the grind and succeed at this challenge.\nGoku is watching you. Do not fail this bro."
-            _ ->
-                liftIO $ putStrLn $ "Try to guess the words!\nYou have " ++ show (lives gameSettings) ++ " lives."
-    playGame
-
-playGame :: GameState ()
-playGame = do
     gameState <- get
-    wordToFind <- liftIO findRandomWord
+    liftIO . putStrLn $
+        case difficulty gameState of
+            SigmaMale ->
+                 "You're keeping your edging streak I see...\nBut even in the middle of the rain a lone wolf must be wet.\nIf you want to keep mewing for the legendary level 5 G Y A T T you must keep the grind and succeed at this challenge.\nGoku is watching you. Do not fail this bro."
+            _ ->
+                "Try to guess the words!\nYou have " ++ show (lives gameState) ++ " lives."
+    gameLoop -- Start the gameLoop
 
-    let numHiddenChars = floor (hiddenLettersPercent gameState * int2Float (length wordToFind))
+gameLoop :: GameState ()
+gameLoop = do
+    gameState <- get
+    let wordToFind = head $ unfoundWords gameState
 
+    -- number of hidden characters based on game difficulty
+    let numHiddenChars = floor (hiddenLettersPercent gameState * int2Float (length wordToFind)) :: Int
+
+    -- String with the hidden indexes of the word
     hiddenOutputs <- liftIO (hiddenOutput (length wordToFind) numHiddenChars)
 
     let processedWord = processWord wordToFind hiddenOutputs
-    if numHiddenChars == 0 
-        then playGame 
+    if numHiddenChars == 0
+        then modify (\gs -> gs {foundWords = foundWords gameState ++ [wordToFind], unfoundWords = tail $ unfoundWords gameState}) >> gameLoop
         else liftIO $ print (fst processedWord)
 
     hangmanWin <- hangmanGambit processedWord
 
-    if hangmanWin 
-        then playGame
-        else gameOver 
+    if hangmanWin
+        then modify (\gs -> gs {foundWords = foundWords gameState ++ [wordToFind], unfoundWords = tail $ unfoundWords gameState}) >> gameLoop
+        else gameOver
 
 hangmanGambit :: (String, String) -> GameState Bool
 hangmanGambit wordTuple = do
@@ -68,34 +75,40 @@ hangmanGambit wordTuple = do
         else
             liftIO (putStrLn "Wrong word.") >> die >> hangmanGambit wordTuple
 
+-- Make the word bank list from the word_bank.txt file. Shuffle the words.
 wordBankList :: IO [String]
-wordBankList = splitOn ", " <$> readFile "data/word_bank.txt"
+wordBankList = do
+    wordList <- splitOn ", " <$> readFile "data/word_bank.txt"
+    vector <- shuffleM (V.fromList wordList)
+    return $ V.toList vector
 
-findRandomWord :: IO String
-findRandomWord = do
-    wordList <- wordBankList
-    randomIndex <- randomRIO (0, length wordList)
-    return $ wordList !! randomIndex
+-- findRandomWord :: GameState String
+-- findRandomWord = do
+--     gameState <- get
+--     randomIndex <- randomRIO (0, length gameState )
+--     return $ wordList !! randomIndex
 
+-- | Make a string with hidden characters out of the original word.
 processWord :: String -> String -> (String, String)
 processWord word hiddenOutput =
     (zipWith (\char hiddenChar -> if hiddenChar == '0' then '_' else char)
         word hiddenOutput, word) -- tuple: (hiddenWord, originalWord)
 
+-- | Make a string out of hidden characters to define the hidden indexes of a word based on its length and a number of hidden characters.
 hiddenOutput :: Int -> Int -> IO String
 hiddenOutput wordLength numHiddenChars = do
     let outputs = replicate numHiddenChars 0 ++ replicate (wordLength - numHiddenChars) 1
     vector <- shuffleM (V.fromList outputs)
     return $ concatMap show $ V.toList vector
 
-
 setSettings :: Difficulty -> GameState()
-setSettings difficulty = case difficulty of
-        Easy -> put GameSettings { lives = 7, hiddenLettersPercent = 10 / 100, difficulty = Easy, score = 0}
-        Normal -> put GameSettings { lives = 5, hiddenLettersPercent = 20 / 100, difficulty = Normal, score = 0 }
-        Hard -> put GameSettings { lives = 3, hiddenLettersPercent = 30 / 100, difficulty = Hard, score = 0 }
-        Hardcore -> put GameSettings { lives = 1, hiddenLettersPercent = 30 / 100, difficulty = Hardcore, score = 0 }
-        SigmaMale -> put GameSettings { lives = 1, hiddenLettersPercent = 70 / 100, difficulty = SigmaMale, score = 10 }
+setSettings difficulty =
+        case difficulty of
+            Easy -> modify (\gs -> gs { lives = 7, hiddenLettersPercent = 10 / 100 })
+            Normal -> modify (\gs -> gs { lives = 5, hiddenLettersPercent = 20 / 100 })
+            Hard -> modify (\gs -> gs { lives = 3, hiddenLettersPercent = 30 / 100 })
+            Hardcore -> modify (\gs -> gs { lives = 1, hiddenLettersPercent = 30 / 100 })
+            SigmaMale -> modify (\gs -> gs { lives = 1, hiddenLettersPercent = 70 / 100, score = 10 })
 
 die :: GameState ()
 die = do

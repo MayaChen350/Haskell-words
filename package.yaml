@@ -2,16 +2,14 @@ name: haskell-words
 version: 0.1.0.0
 github: "MayaChen350/haskell-words"
 dependencies:
-  - base >= 4.7 && < 5
-  - random
-  - mtl
-  - Cabal-syntax
-  - perfect-vector-shuffle
-  - vector
-  - split
-library:
-  source-dirs: src/libs
+    - base >= 4.7 && < 5
+    - random
+    - mtl
+    - Cabal-syntax
+    - perfect-vector-shuffle
+    - vector
+    - split
 executables:
-  haskell-words-exe:
-    main: Main.hs
-    source-dirs: src
+    haskell-words-exe:
+        main: Main.hs
+        source-dirs: src
