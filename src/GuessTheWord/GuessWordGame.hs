@@ -9,13 +9,13 @@ import Control.Monad.State
       StateT )
 import Control.Exception ( throw )
 import Immutable.Shuffle ( shuffleM, shuffle )
-import qualified Data.Vector as V
+import qualified Data.Vector as V ( Vector, fromList, toList, (++), head, tail )
 import Data.List.Split ( splitOn )
 import GHC.Float ( int2Float )
 import System.Random (randomRIO)
 import Data.List.NonEmpty (append)
 
-data GameSettings = GameSettings {lives :: Int, hiddenLettersPercent :: Float, difficulty :: Difficulty, score :: Int, foundWords :: [String], unfoundWords :: [String]}
+data GameSettings = GameSettings {lives :: Int, hiddenLettersPercent :: Float, difficulty :: Difficulty, score :: Int, foundWords :: V.Vector String, unfoundWords :: V.Vector String}
 
 type GameState = StateT GameSettings IO
 
@@ -23,7 +23,7 @@ type GameState = StateT GameSettings IO
 guessWordGame:: Difficulty -> IO ()
 guessWordGame dif = do
     wordBank <- wordBankList
-    gameSettings <- execStateT (setSettings dif) (GameSettings 0 0 dif 0 [] wordBank)
+    gameSettings <- execStateT (setSettings dif) (GameSettings 0 0 dif 0 (V.fromList []) wordBank)
     evalStateT gameIntro gameSettings
 
 -- | Call the introduction message to the game.
@@ -41,7 +41,7 @@ gameIntro = do
 gameLoop :: GameState ()
 gameLoop = do
     gameState <- get
-    let wordToFind = head $ unfoundWords gameState
+    let wordToFind = V.head $ unfoundWords gameState
 
     -- number of hidden characters based on game difficulty
     let numHiddenChars = floor (hiddenLettersPercent gameState * int2Float (length wordToFind)) :: Int
@@ -51,13 +51,13 @@ gameLoop = do
 
     let processedWord = processWord wordToFind hiddenOutputs
     if numHiddenChars == 0
-        then modify (\gs -> gs {foundWords = foundWords gameState ++ [wordToFind], unfoundWords = tail $ unfoundWords gameState}) >> gameLoop
+        then modify (\gs -> gs {foundWords = foundWords gameState V.++ V.fromList [wordToFind], unfoundWords = V.tail $ unfoundWords gameState}) >> gameLoop
         else liftIO $ print (fst processedWord)
 
     hangmanWin <- hangmanGambit processedWord
 
     if hangmanWin
-        then modify (\gs -> gs {foundWords = foundWords gameState ++ [wordToFind], unfoundWords = tail $ unfoundWords gameState}) >> gameLoop
+        then modify (\gs -> gs {foundWords = foundWords gameState V.++ V.fromList [wordToFind], unfoundWords = V.tail $ unfoundWords gameState}) >> gameLoop
         else gameOver
 
 hangmanGambit :: (String, String) -> GameState Bool
@@ -76,11 +76,10 @@ hangmanGambit wordTuple = do
             liftIO (putStrLn "Wrong word.") >> die >> hangmanGambit wordTuple
 
 -- Make the word bank list from the word_bank.txt file. Shuffle the words.
-wordBankList :: IO [String]
+wordBankList :: IO (V.Vector String)
 wordBankList = do
     wordList <- splitOn ", " <$> readFile "data/word_bank.txt"
-    vector <- shuffleM (V.fromList wordList)
-    return $ V.toList vector
+    shuffleM (V.fromList wordList)
 
 -- findRandomWord :: GameState String
 -- findRandomWord = do
