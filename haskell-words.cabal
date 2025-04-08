@@ -5,7 +5,7 @@ cabal-version: 1.12
 -- see: https://github.com/sol/hpack
 
 name:           haskell-words
-version:        0.1.0.0
+version:        1.0.0.0
 homepage:       https://github.com/MayaChen350/haskell-words#readme
 bug-reports:    https://github.com/MayaChen350/haskell-words/issues
 license:        BSD3
@@ -28,6 +28,7 @@ executable haskell-words-exe
   build-depends:
       Cabal-syntax
     , base >=4.7 && <5
+    , directory
     , mtl
     , perfect-vector-shuffle
     , random

@@ -1,5 +1,5 @@
 name: haskell-words
-version: 0.1.0.0
+version: 1.0.0.0
 github: "MayaChen350/haskell-words"
 dependencies:
     - base >= 4.7 && < 5
@@ -9,6 +9,7 @@ dependencies:
     - perfect-vector-shuffle
     - vector
     - split
+    - directory
 executables:
     haskell-words-exe:
         main: Main.hs
